@@ -4,13 +4,13 @@
   "description": "Enterprise-grade MCP server for Azure SQL with Azure AD auth, 34 tools, and tiered safety gates",
   "license": "MIT",
   "author": "Albahub, LLC <admin@albahub.io>",
-  "homepage": "https://github.com/ialbahub/mcp-azure-sql",
+  "homepage": "https://github.com/albahubio/mcp-azure-sql",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ialbahub/mcp-azure-sql.git"
+    "url": "https://github.com/albahubio/mcp-azure-sql.git"
   },
   "bugs": {
-    "url": "https://github.com/ialbahub/mcp-azure-sql/issues"
+    "url": "https://github.com/albahubio/mcp-azure-sql/issues"
   },
   "keywords": [
     "mcp",

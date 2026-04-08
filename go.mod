@@ -1,4 +1,4 @@
-module github.com/ialbahub/mcp-azure-sql
+module github.com/albahubio/mcp-azure-sql
 
 go 1.25.7
 

@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/mcp-azure-sql"><img src="https://img.shields.io/npm/v/mcp-azure-sql?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="npm"></a>&nbsp;
-  <a href="https://github.com/ialbahub/mcp-azure-sql/releases"><img src="https://img.shields.io/github/v/release/ialbahub/mcp-azure-sql?style=for-the-badge&color=00A67E&label=release" alt="Release"></a>&nbsp;
+  <a href="https://github.com/albahubio/mcp-azure-sql/releases"><img src="https://img.shields.io/github/v/release/albahubio/mcp-azure-sql?style=for-the-badge&color=00A67E&label=release" alt="Release"></a>&nbsp;
   <img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go">&nbsp;
   <img src="https://img.shields.io/badge/tools-34-3178C6?style=for-the-badge" alt="34 Tools">&nbsp;
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2024--11--05-8B5CF6?style=for-the-badge" alt="MCP"></a>

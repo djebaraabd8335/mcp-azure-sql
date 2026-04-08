@@ -1,9 +1,9 @@
 #!/bin/sh
 # Install mcp-azure-sql — downloads the latest release binary for your platform.
-# Usage: curl -fsSL https://raw.githubusercontent.com/ialbahub/mcp-azure-sql/main/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/albahubio/mcp-azure-sql/main/install.sh | sh
 set -e
 
-REPO="ialbahub/mcp-azure-sql"
+REPO="albahubio/mcp-azure-sql"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
 # Detect OS and architecture

@@ -522,7 +522,39 @@ func scanRows(rows *sql.Rows, maxRows int) ([]map[string]any, []string, int, err
 	return results, columns, count, nil
 }
 
-const version = "1.1.0"
+const version = "1.2.0"
+
+// MCP tool annotation helpers for semantic hints to AI agents
+func boolPtr(b bool) *bool { return &b }
+
+var (
+	readOnlyAnnotation = mcp.ToolAnnotation{
+		Title:         "Read-only database query",
+		ReadOnlyHint:  boolPtr(true),
+		OpenWorldHint: boolPtr(true),
+	}
+	writeAnnotation = mcp.ToolAnnotation{
+		Title:           "Database write operation",
+		DestructiveHint: boolPtr(true),
+		OpenWorldHint:   boolPtr(true),
+	}
+	metadataAnnotation = mcp.ToolAnnotation{
+		Title:          "Connection metadata",
+		ReadOnlyHint:   boolPtr(true),
+		IdempotentHint: boolPtr(true),
+	}
+	schemaAnnotation = mcp.ToolAnnotation{
+		Title:          "Database schema discovery",
+		ReadOnlyHint:   boolPtr(true),
+		IdempotentHint: boolPtr(true),
+		OpenWorldHint:  boolPtr(true),
+	}
+	perfAnnotation = mcp.ToolAnnotation{
+		Title:         "Performance diagnostics",
+		ReadOnlyHint:  boolPtr(true),
+		OpenWorldHint: boolPtr(true),
+	}
+)
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmsgprefix)
@@ -540,17 +572,20 @@ func main() {
 		"Azure SQL MCP Server",
 		version,
 		server.WithToolCapabilities(true),
+		server.WithLogging(),
 	)
 
 	// ── Read tools ──
 	s.AddTool(mcp.NewTool("query",
 		mcp.WithDescription("Execute a read-only SQL query (SELECT, WITH, sp_help) against an Azure SQL database. Uses Azure AD (Entra ID) auth via DefaultAzureCredential. For write operations use 'execute'."),
+		mcp.WithToolAnnotation(readOnlyAnnotation),
 		mcp.WithString("connection", mcp.Description("Connection name (e.g., 'my-dev-db', 'my-qa-db', 'my-prod-db')"), mcp.Required()),
 		mcp.WithString("sql", mcp.Description("SQL query (must be read-only)"), mcp.Required()),
 	), queryHandler)
 
 	// ── Write tools ──
 	s.AddTool(mcp.NewTool("execute",
+		mcp.WithToolAnnotation(writeAnnotation),
 		mcp.WithDescription("Execute a SQL statement that modifies data (INSERT, UPDATE, DELETE, CREATE, ALTER, EXEC). Requires confirm=true. On production databases, dangerous DDL (DROP, TRUNCATE, ALTER) is blocked."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("sql", mcp.Description("SQL statement to execute"), mcp.Required()),
@@ -559,15 +594,18 @@ func main() {
 
 	// ── Connection management ──
 	s.AddTool(mcp.NewTool("list_connections",
+		mcp.WithToolAnnotation(metadataAnnotation),
 		mcp.WithDescription("List all configured Azure SQL database connections with server, database, and production status."),
 	), listConnectionsHandler)
 
 	s.AddTool(mcp.NewTool("test_connection",
+		mcp.WithToolAnnotation(metadataAnnotation),
 		mcp.WithDescription("Test connectivity to an Azure SQL database. Returns server version, database name, current user, and production status."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), testConnectionHandler)
 
 	s.AddTool(mcp.NewTool("add_connection",
+		mcp.WithToolAnnotation(metadataAnnotation),
 		mcp.WithDescription("Add a new database connection at runtime (no restart needed). Supports Azure AD auth (default), SQL auth, or raw connection string. The connection persists for the lifetime of this MCP session."),
 		mcp.WithString("name", mcp.Description("Connection name (e.g., 'my-dev-db')"), mcp.Required()),
 		mcp.WithString("server", mcp.Description("Server FQDN (e.g., 'myserver.database.windows.net')")),
@@ -582,42 +620,49 @@ func main() {
 	), addConnectionHandler)
 
 	s.AddTool(mcp.NewTool("connection_info",
+		mcp.WithToolAnnotation(metadataAnnotation),
 		mcp.WithDescription("Get detailed metadata about a connection: server, database, auth mode, environment, production status, pool status, and description."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), connectionInfoHandler)
 
 	// ── Schema discovery ──
 	s.AddTool(mcp.NewTool("list_tables",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("List all tables in the database, grouped by schema."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("schema", mcp.Description("Filter by schema (optional, e.g., 'dbo')")),
 	), listTablesHandler)
 
 	s.AddTool(mcp.NewTool("describe_table",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Get full schema of a table: columns, types, nullability, primary keys, defaults."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("table", mcp.Description("Table name (optionally schema-qualified, e.g., 'dbo.Orders')"), mcp.Required()),
 	), describeTableHandler)
 
 	s.AddTool(mcp.NewTool("describe_indexes",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Get all indexes on a table: columns, uniqueness, type (clustered/nonclustered), included columns."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("table", mcp.Description("Table name (optionally schema-qualified)"), mcp.Required()),
 	), describeIndexesHandler)
 
 	s.AddTool(mcp.NewTool("describe_foreign_keys",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Get all foreign key relationships for a table — both outgoing (this table references) and incoming (references this table)."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("table", mcp.Description("Table name (optionally schema-qualified)"), mcp.Required()),
 	), describeForeignKeysHandler)
 
 	s.AddTool(mcp.NewTool("search_columns",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Search for columns by name pattern across all tables. Useful for finding where a field exists."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("pattern", mcp.Description("Column name pattern (SQL LIKE, e.g., '%CompanyId%')"), mcp.Required()),
 	), searchColumnsHandler)
 
 	s.AddTool(mcp.NewTool("table_row_counts",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Get approximate row counts for all tables in a schema (fast, uses sys.partitions)."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("schema", mcp.Description("Schema name (default: 'dbo')")),
@@ -625,12 +670,14 @@ func main() {
 
 	// ── Views ──
 	s.AddTool(mcp.NewTool("list_views",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("List all views in the database, optionally filtered by schema."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("schema", mcp.Description("Filter by schema (optional)")),
 	), listViewsHandler)
 
 	s.AddTool(mcp.NewTool("describe_view",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Get the SQL definition of a view."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("name", mcp.Description("View name (optionally schema-qualified)"), mcp.Required()),
@@ -638,6 +685,7 @@ func main() {
 
 	// ── Stored procedures ──
 	s.AddTool(mcp.NewTool("list_stored_procs",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("List stored procedures, optionally filtered by schema or name pattern."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("schema", mcp.Description("Filter by schema (optional)")),
@@ -645,6 +693,7 @@ func main() {
 	), listStoredProcsHandler)
 
 	s.AddTool(mcp.NewTool("describe_sproc",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Get stored procedure definition (source code) and parameters."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("name", mcp.Description("Proc name (optionally schema-qualified)"), mcp.Required()),
@@ -652,12 +701,14 @@ func main() {
 
 	// ── Functions ──
 	s.AddTool(mcp.NewTool("list_functions",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("List user-defined functions (scalar, table-valued, inline), optionally filtered by schema."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("schema", mcp.Description("Filter by schema (optional)")),
 	), listFunctionsHandler)
 
 	s.AddTool(mcp.NewTool("describe_function",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Get user-defined function definition and parameters."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("name", mcp.Description("Function name (optionally schema-qualified)"), mcp.Required()),
@@ -665,50 +716,59 @@ func main() {
 
 	// ── Performance & diagnostics ──
 	s.AddTool(mcp.NewTool("explain_query",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Get the estimated execution plan for a SQL query (text format). Useful for performance analysis."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("sql", mcp.Description("SQL query to explain"), mcp.Required()),
 	), explainQueryHandler)
 
 	s.AddTool(mcp.NewTool("active_queries",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Show currently executing queries on the database with their status, duration, wait type, and blocking info. Essential for debugging live performance issues."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), activeQueriesHandler)
 
 	s.AddTool(mcp.NewTool("index_usage_stats",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Get index usage statistics for a table: seeks, scans, lookups, updates. Identifies unused indexes and missing index recommendations."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("table", mcp.Description("Table name (optionally schema-qualified)"), mcp.Required()),
 	), indexUsageStatsHandler)
 
 	s.AddTool(mcp.NewTool("database_size",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Get database size: total allocated, data files, log files, used and free space."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), databaseSizeHandler)
 
 	s.AddTool(mcp.NewTool("search_objects",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Search for any database object (table, view, procedure, function, trigger) by name pattern. The universal 'find anything' tool."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("pattern", mcp.Description("Object name pattern (SQL LIKE, e.g., '%Order%', '%VRS%')"), mcp.Required()),
 	), searchObjectsHandler)
 
 	s.AddTool(mcp.NewTool("describe_triggers",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("List all triggers on a table with their event type (INSERT/UPDATE/DELETE), timing (AFTER/INSTEAD OF), enabled status, and definition."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("table", mcp.Description("Table name (optionally schema-qualified)"), mcp.Required()),
 	), describeTriggersHandler)
 
 	s.AddTool(mcp.NewTool("missing_indexes",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Get SQL Server's built-in missing index recommendations from DMVs. Shows potential improvement, impact, and the columns that should be indexed."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), missingIndexesHandler)
 
 	s.AddTool(mcp.NewTool("top_queries_by_cpu",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Get the top 20 most CPU-intensive queries from the plan cache. Shows total CPU time, execution count, and query text."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), topQueriesByCPUHandler)
 
 	s.AddTool(mcp.NewTool("compare_tables",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Compare the schema of a table across two database connections. Shows columns that are added, removed, or changed between environments (e.g., dev vs QA, QA vs prod)."),
 		mcp.WithString("source", mcp.Description("Source connection name (e.g., 'my-dev-db')"), mcp.Required()),
 		mcp.WithString("target", mcp.Description("Target connection name (e.g., 'my-qa-db')"), mcp.Required()),
@@ -717,39 +777,46 @@ func main() {
 
 	// ── Advanced diagnostics ──
 	s.AddTool(mcp.NewTool("wait_stats",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Get server wait statistics — the #1 tool for Azure SQL performance triage. Shows top waits by total time, excluding benign system waits."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), waitStatsHandler)
 
 	s.AddTool(mcp.NewTool("blocking_chains",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Show the live blocking chain tree — who is blocking whom, with the head blocker at the top. Essential for deadlock and contention debugging."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), blockingChainsHandler)
 
 	s.AddTool(mcp.NewTool("hangfire_dashboard",
+		mcp.WithToolAnnotation(readOnlyAnnotation),
 		mcp.WithDescription("Get Hangfire job processing status: queue depths, job states (last 24h), recent failures, and long-running jobs. Works on databases that have the HangFire schema."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), hangfireDashboardHandler)
 
 	// ── Developer & compliance tools ──
 	s.AddTool(mcp.NewTool("ef6_migration_status",
+		mcp.WithToolAnnotation(schemaAnnotation),
 		mcp.WithDescription("Show EF6 migration history from __MigrationHistory table. Lists applied migrations with timestamps, useful for comparing what's deployed across environments."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("context", mcp.Description("Context key filter (optional, e.g., 'LSP' to match LSP context)")),
 	), ef6MigrationStatusHandler)
 
 	s.AddTool(mcp.NewTool("table_statistics_health",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Show stale/modified statistics across all tables. Identifies tables where statistics are outdated (high modification count relative to row count), which causes query plan regressions."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), tableStatisticsHealthHandler)
 
 	s.AddTool(mcp.NewTool("long_running_queries",
+		mcp.WithToolAnnotation(perfAnnotation),
 		mcp.WithDescription("Show queries running longer than a threshold (default 10 seconds) with CPU time, reads, writes, and the current SQL text. Use for identifying runaway queries in production."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 		mcp.WithString("threshold_seconds", mcp.Description("Minimum duration in seconds (default: 10)")),
 	), longRunningQueriesHandler)
 
 	s.AddTool(mcp.NewTool("permission_audit",
+		mcp.WithToolAnnotation(readOnlyAnnotation),
 		mcp.WithDescription("List all database principals with their role memberships and object-level permissions. Essential for FDA 21 CFR Part 11 compliance audits and access control reviews."),
 		mcp.WithString("connection", mcp.Description("Connection name"), mcp.Required()),
 	), permissionAuditHandler)

@@ -1,0 +1,22 @@
+# Binary
+mcp-azure-sql
+mcp-azure-sql.exe
+
+# Go
+*.test
+*.out
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config files with credentials
+connections.json
+!example-config.json

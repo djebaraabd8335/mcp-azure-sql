@@ -1,0 +1,56 @@
+{
+  "defaults": {
+    "auth": "azuread",
+    "app_name": "azure-sql-mcp"
+  },
+  "connections": [
+    {
+      "name": "my-dev-db",
+      "server": "myserver-dev.database.windows.net",
+      "database": "myapp-dev",
+      "environment": "dev",
+      "description": "Development database"
+    },
+    {
+      "name": "my-qa-db",
+      "server": "myserver-qa.database.windows.net",
+      "database": "myapp-qa",
+      "environment": "qa",
+      "description": "QA environment"
+    },
+    {
+      "name": "my-staging-db",
+      "server": "myserver-staging.database.windows.net",
+      "database": "myapp-staging",
+      "environment": "preprod",
+      "description": "Pre-production staging"
+    },
+    {
+      "name": "my-prod-db",
+      "server": "myserver-prod.database.windows.net",
+      "database": "myapp-prod",
+      "environment": "prod",
+      "prod": true,
+      "description": "Production database (safety gates enabled)"
+    },
+    {
+      "name": "legacy-warehouse",
+      "server": "legacy-sql.example.com",
+      "database": "WarehouseDB",
+      "auth": "sql",
+      "user": "readonly_user",
+      "password": "${WAREHOUSE_DB_PASSWORD}",
+      "environment": "prod",
+      "description": "Legacy system with SQL Server authentication"
+    },
+    {
+      "name": "partner-api-db",
+      "auth": "connstr",
+      "connection_string": "Server=partner.database.windows.net;Database=SharedDB;User Id=app_user;Password=${PARTNER_DB_PASSWORD};Encrypt=true;",
+      "server": "partner.database.windows.net",
+      "database": "SharedDB",
+      "environment": "prod",
+      "description": "External partner database (raw connection string)"
+    }
+  ]
+}

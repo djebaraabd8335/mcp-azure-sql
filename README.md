@@ -27,89 +27,83 @@ npx -y mcp-azure-sql --version
 
 ### Step 1 — Add to your AI agent
 
-Pick your agent. Copy the config. Restart the agent.
+Pick your agent below. One command or one config block. Then restart.
 
-<table>
-<tr><td><strong>Claude Code</strong></td><td>
+---
+
+#### ![Anthropic](https://img.shields.io/badge/Anthropic-Claude_Code-D97706?style=flat-square&logo=anthropic&logoColor=white) Claude Code
 
 ```bash
 claude mcp add --transport stdio --scope user azure-sql -- npx -y mcp-azure-sql
 ```
 
-</td></tr>
-<tr><td><strong>Codex CLI</strong></td><td>
+#### ![Anthropic](https://img.shields.io/badge/Anthropic-Claude_Desktop-D97706?style=flat-square&logo=anthropic&logoColor=white) Claude Desktop
 
-Add to `~/.codex/config.toml`:
-```toml
-[mcp_servers.azure-sql]
-command = "npx"
-args = ["-y", "mcp-azure-sql"]
-env_vars = ["AZURE_SQL_CONFIG_FILE"]
-```
-
-</td></tr>
-<tr><td><strong>Cursor</strong></td><td>
-
-Add to `~/.cursor/mcp.json` → `mcpServers`:
+Add to `claude_desktop_config.json` ([macOS](~/Library/Application%20Support/Claude/) · [Windows](%APPDATA%\Claude\)):
 ```json
-"azure-sql": {
-  "command": "npx",
-  "args": ["-y", "mcp-azure-sql"],
-  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
-}
+{ "mcpServers": { "azure-sql": { "command": "npx", "args": ["-y", "mcp-azure-sql"],
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }}}}
 ```
 
-</td></tr>
-<tr><td><strong>GitHub Copilot</strong></td><td>
+---
 
-Add to VS Code `settings.json`:
+#### ![OpenAI](https://img.shields.io/badge/OpenAI-Codex_CLI-412991?style=flat-square&logo=openai&logoColor=white) Codex CLI
+
+```bash
+codex mcp add azure-sql -- npx -y mcp-azure-sql
+```
+
+---
+
+#### ![Google](https://img.shields.io/badge/Google-Gemini_CLI-4285F4?style=flat-square&logo=google&logoColor=white) Gemini CLI
+
+```bash
+gemini mcp add -s user -e AZURE_SQL_CONFIG_FILE=~/.config/azure-sql-mcp/connections.json azure-sql npx -y mcp-azure-sql
+```
+
+---
+
+#### ![GitHub](https://img.shields.io/badge/GitHub-Copilot-000?style=flat-square&logo=github&logoColor=white) GitHub Copilot (VS Code)
+
+Add to VS Code `settings.json` (Ctrl+Shift+P → "Preferences: Open User Settings (JSON)"):
 ```json
-"mcp": { "servers": { "azure-sql": {
-  "type": "stdio",
-  "command": "npx",
-  "args": ["-y", "mcp-azure-sql"],
-  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
-}}}
+"mcp": { "servers": { "azure-sql": { "type": "stdio", "command": "npx", "args": ["-y", "mcp-azure-sql"],
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }}}}
 ```
 
-</td></tr>
-<tr><td><strong>Gemini CLI</strong></td><td>
+---
 
-Add to `~/.gemini/settings.json` → `mcpServers`:
+#### ![Cursor](https://img.shields.io/badge/Cursor-Agent-00D1B2?style=flat-square) Cursor
+
+Add to `~/.cursor/mcp.json` under `mcpServers`:
 ```json
-"azure-sql": {
-  "command": "npx",
-  "args": ["-y", "mcp-azure-sql"],
-  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
-}
+"azure-sql": { "command": "npx", "args": ["-y", "mcp-azure-sql"],
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }}
 ```
 
-</td></tr>
-<tr><td><strong>Windsurf</strong></td><td>
+---
 
-Add to `~/.codeium/windsurf/mcp_config.json` → `mcpServers`:
+#### ![Codeium](https://img.shields.io/badge/Codeium-Windsurf-09B6A2?style=flat-square) Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json` under `mcpServers`:
 ```json
-"azure-sql": {
-  "command": "npx",
-  "args": ["-y", "mcp-azure-sql"],
-  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
-}
+"azure-sql": { "command": "npx", "args": ["-y", "mcp-azure-sql"],
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }}
 ```
 
-</td></tr>
-<tr><td><strong>Cline</strong></td><td>
+---
+
+#### ![VS Code](https://img.shields.io/badge/VS_Code-Cline-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white) Cline
 
 Add via Cline MCP Settings UI, or edit `cline_mcp_settings.json`:
 ```json
-"azure-sql": {
-  "command": "npx",
-  "args": ["-y", "mcp-azure-sql"],
-  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
-}
+{ "mcpServers": { "azure-sql": { "command": "npx", "args": ["-y", "mcp-azure-sql"],
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }}}}
 ```
 
-</td></tr>
-<tr><td><strong>Continue</strong></td><td>
+---
+
+#### ![Continue](https://img.shields.io/badge/Continue-Dev-FF6F00?style=flat-square) Continue
 
 Add to `~/.continue/config.yaml`:
 ```yaml
@@ -121,20 +115,14 @@ mcpServers:
       AZURE_SQL_CONFIG_FILE: ~/.config/azure-sql-mcp/connections.json
 ```
 
-</td></tr>
-<tr><td><strong>Claude Desktop</strong></td><td>
+---
 
-Add to `claude_desktop_config.json`:
-```json
-"azure-sql": {
-  "command": "npx",
-  "args": ["-y", "mcp-azure-sql"],
-  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
-}
+#### Any other MCP client
+
+Standard MCP over stdio. JSON-RPC 2.0, protocol `2024-11-05`. Run:
+```bash
+npx -y mcp-azure-sql
 ```
-
-</td></tr>
-</table>
 
 ### Step 2 — Configure your databases
 

@@ -522,7 +522,8 @@ func scanRows(rows *sql.Rows, maxRows int) ([]map[string]any, []string, int, err
 	return results, columns, count, nil
 }
 
-const version = "1.2.0"
+// version is set via ldflags by goreleaser: -X main.version=X.Y.Z
+var version = "1.2.0"
 
 // MCP tool annotation helpers for semantic hints to AI agents
 func boolPtr(b bool) *bool { return &b }

